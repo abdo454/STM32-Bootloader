@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>img/refresh_64.png</file>
+    </qresource>
+</RCC>
