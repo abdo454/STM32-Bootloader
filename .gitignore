@@ -119,3 +119,6 @@ compile_commands.json
 *creator.user*
 
 *_qmlcache.qrc
+
+# Qt Build Folder
+Bootloader_GUI/Build-Bootloader_GUI/
