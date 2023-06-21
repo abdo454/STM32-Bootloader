@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>13</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>338</x>
+      <y>273</y>
+      <w>130</w>
+      <h>247</h>
+    </coordinates>
+    <panel_attributes>
+
+
+
+
+bg=orange
+Flash Memory
+
+(1MB)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>559</x>
+      <y>143</y>
+      <w>130</w>
+      <h>221</h>
+    </coordinates>
+    <panel_attributes>
+
+
+
+bg=yellow
+Application
+Section
+
+(896 KB)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>455</x>
+      <y>130</y>
+      <w>130</w>
+      <h>169</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.</panel_attributes>
+    <additional_attributes>80.0;10.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>559</x>
+      <y>364</y>
+      <w>130</w>
+      <h>221</h>
+    </coordinates>
+    <panel_attributes>
+
+
+
+Bootloader
+Section
+
+(128 KB)
+bg=pink</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>455</x>
+      <y>507</y>
+      <w>130</w>
+      <h>104</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.</panel_attributes>
+    <additional_attributes>80.0;60.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>689</x>
+      <y>338</y>
+      <w>156</w>
+      <h>26</h>
+    </coordinates>
+    <panel_attributes>0x0802 0000
+style=wordwrap</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>689</x>
+      <y>130</y>
+      <w>143</w>
+      <h>26</h>
+    </coordinates>
+    <panel_attributes>0x080F FFFF
+style=wordwrap</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>689</x>
+      <y>559</y>
+      <w>156</w>
+      <h>26</h>
+    </coordinates>
+    <panel_attributes>0x0800 0000
+style=wordwrap</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>689</x>
+      <y>364</y>
+      <w>182</w>
+      <h>26</h>
+    </coordinates>
+    <panel_attributes>0x0801 FFFF
+style=wordwrap</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>338</x>
+      <y>247</y>
+      <w>143</w>
+      <h>26</h>
+    </coordinates>
+    <panel_attributes>0x080F FFFF
+style=wordwrap</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>338</x>
+      <y>494</y>
+      <w>156</w>
+      <h>26</h>
+    </coordinates>
+    <panel_attributes>0x0800 0000
+style=wordwrap
+layer=1</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
