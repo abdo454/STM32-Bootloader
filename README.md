@@ -57,7 +57,7 @@ The above flow chart shows what happens when the MCU enters the bootloader. Firs
 * **Header Packet**: has the information of the new App binary file (size and his CRC).
 * **Data Packet**: Contains a single Chunk of the new App binary file.
 
-  ![Memory Section](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Flow%20Chart%20of%20Bootloader%20.png?raw=true)
+  ![FlowChart Diagram](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Bootloader%20Gui.png?raw=true)
  
 
 
