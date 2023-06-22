@@ -57,7 +57,7 @@ The above flow chart shows what happens when the MCU enters the bootloader. Firs
 * **Header Packet**: has the information of the new App binary file (size and his CRC).
 * **Data Packet**: Contains a single Chunk of the new App binary file.
 
-  ![FlowChart Diagram](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Bootloader%20Gui.png?raw=true)
+  ![FlowChart Diagram](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Flow%20Chart%20of%20Bootloader%20.png?raw=true)
  
 
 
@@ -124,7 +124,7 @@ In the previous step, the ORIGIN address of Application Flash memory was changed
 # Graphical user interface (GUI):
 The following screen is designed and implemented by QT Creator with C++ on Ubuntu OS for Flashing MCU and doing some commands:
 
-  ![Memory Section](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Bootloader%Gui.png?raw=true)
+  ![Graphical user interface](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Bootloader%20Gui.png?raw=true)
  
 
 
