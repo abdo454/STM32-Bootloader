@@ -28,7 +28,7 @@ The Flash memory of **STM32412ZGT6** has the following main features:
   * A main memory block is divided into 4 sectors of 16 kbytes, plus 1 sector of 64 kbytes, and 7 sectors of 128 kbytes.
   * System memory from which the device boots in System memory boot mode  "*when Boot0 pin is set"*.
 
-  ![Flash module organization](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Screenshot%20from%202023-06-21%2011-42-11.png?raw=true)
+  ![Flash module organization](https://github.com/abdo454/STM32-Bootloader/blob/main/img/Memory%20organization%20of%20STM32F412ZGT6.png?raw=true)
 
 The programmers have to divide the Flash into two sections "at least" : one application, one bootloader section. The application section contains end-customer code, and the bootloader section contains the customizable bootloader.
 
