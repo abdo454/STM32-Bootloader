@@ -57,9 +57,8 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-
-extern UART_HandleTypeDef huart2;
-
+#define BL_LED_Pin GPIO_PIN_0
+#define BL_LED_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 

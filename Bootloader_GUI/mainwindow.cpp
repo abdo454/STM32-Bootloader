@@ -15,9 +15,9 @@ MainWindow::MainWindow(QWidget *parent)
   ui->setupUi(this);
   ui->statusbar->showMessage(
       "Copyright © 2023: Abdo Daood   < abdo.daood94@gmail.com >");
-      ui->lblVersion->setText("V 0.2");
-      ui->statusbar->addPermanentWidget(ui->lblVersion);
-      ui->cbxSerials->setCurrentIndex(-1);
+  ui->lblVersion->setText("V 0.2");
+  ui->statusbar->addPermanentWidget(ui->lblVersion);
+  ui->cbxSerials->setCurrentIndex(-1);
   Q_FOREACH (const QSerialPortInfo &serialPortInfo,
              QSerialPortInfo::availablePorts()) {
     ui->cbxSerials->addItem(serialPortInfo.portName());
@@ -81,8 +81,10 @@ void MainWindow::open_connection_with_stm32() {
                            .packet_type = BL_PACKET_TYPE_CMD,
                            .data_len = 1,
                            .cmd = BL_CMD_STAY_IN_BOOTLOADER_MODE,
-                           .crc = 0x00, // TO_DO
+                           .crc = 0x00,
                            .eof = BL_EOF};
+  stm_cmd.crc = stm_crc32.CalcCRC((uint8_t *)&stm_cmd,
+                                  5); /* 5= sof,packet_type,data_len,cmd*/
   BL_STM32_RESPONSE_ stm_resp = {.sof = 0,
                                  .packet_type = 0,
                                  .data_len = 0,
@@ -95,17 +97,20 @@ void MainWindow::open_connection_with_stm32() {
     serialport.flush();
     ui->txtConsole->insertPlainText(" . ");
     if (readBytes((uint8_t *)&stm_resp, sizeof(stm_resp), BL_MCU_OPEN_CTN_LOOP,
-                  UART_READ_SLEEP_US) == sizeof(stm_resp))
-      break;
+                  UART_READ_SLEEP_US) == sizeof(stm_resp)) {
+      if (stm_resp.sof == BL_SOF &&
+          stm_resp.packet_type == BL_PACKET_TYPE_RESPONSE &&
+          stm_resp.data_len == 1 && stm_resp.status == BL_ACK &&
+          stm_resp.crc ==
+              stm_crc32.CalcCRC((uint8_t *)&stm_resp,
+                                5) && // 5= sof,packet_type,data_len,cmd
+          stm_resp.eof == BL_EOF) {
+        Console_msg_result(" STM32 in Bootloader Mode.");
+        ui->gbxCommands->setEnabled(true);
+        break;
+      }
+    }
     qApp->processEvents();
-  }
-  if (stm_resp.sof == BL_SOF &&
-      stm_resp.packet_type == BL_PACKET_TYPE_RESPONSE &&
-      stm_resp.data_len == 1 && stm_resp.status == BL_ACK &&
-      stm_resp.crc == 0 && // TO_DO
-      stm_resp.eof == BL_EOF) {
-    Console_msg_result(" STM32 in Bootloader Mode.");
-    ui->gbxCommands->setEnabled(true);
   }
 }
 
@@ -164,8 +169,10 @@ void MainWindow::on_btnLunchApp_clicked() {
                              .packet_type = BL_PACKET_TYPE_CMD,
                              .data_len = 1,
                              .cmd = BL_CMD_LUNCH_APK,
-                             .crc = 0x00, // TO_DO
+                             .crc = 0x00,
                              .eof = BL_EOF};
+    stm_cmd.crc = stm_crc32.CalcCRC((uint8_t *)&stm_cmd,
+                                    5); /* 5= sof,packet_type,data_len,cmd*/
     Console_msg(">>> Launch Application >>>");
     serialport.write((char *)&stm_cmd, sizeof(stm_cmd));
     serialport.flush();
@@ -191,8 +198,10 @@ void MainWindow::on_btnResetMCU_clicked() {
                              .packet_type = BL_PACKET_TYPE_CMD,
                              .data_len = 1,
                              .cmd = BL_CMD_RESET,
-                             .crc = 0x00, // TO_DO
+                             .crc = 0x00,
                              .eof = BL_EOF};
+    stm_cmd.crc = stm_crc32.CalcCRC((uint8_t *)&stm_cmd,
+                                    5); /* 5= sof,packet_type,data_len,cmd*/
     Console_msg(">>> Reset MCU >>>");
     serialport.write((char *)&stm_cmd, sizeof(stm_cmd));
     serialport.flush();
@@ -217,8 +226,10 @@ void MainWindow::on_btnGetBLVersion_clicked() {
                              .packet_type = BL_PACKET_TYPE_CMD,
                              .data_len = 1,
                              .cmd = BL_CMD_BL_VERSION,
-                             .crc = 0x00, // TO_DO
+                             .crc = 0x00,
                              .eof = BL_EOF};
+    stm_cmd.crc = stm_crc32.CalcCRC((uint8_t *)&stm_cmd,
+                                    5); /* 5= sof,packet_type,data_len,cmd*/
     Console_msg(">>> Get BootLoader Version >>>");
     serialport.write((char *)&stm_cmd, sizeof(stm_cmd));
     serialport.flush();
@@ -274,16 +285,20 @@ void MainWindow::on_btnFlash_clicked() {
     return;
   }
   // 1- Send Header packet : size of binary file + CRC
-  BL_FIRMWARE_INFO_ binary_info = {.firmware_size = fw_size,
-                                   .firmware_crc = 0, // TO_DO Calculate crc
-                                   .reserved1 = 0,
-                                   .reserved2 = 0};
+  BL_FIRMWARE_INFO_ binary_info = {
+      .firmware_size = fw_size,
+      .firmware_crc = stm_crc32.CalcCRC((uint8_t *)fw_data, fw_size),
+      .reserved1 = 0,
+      .reserved2 = 0};
   BL_STM32_Header_ header = {.sof = BL_SOF,
                              .packet_type = BL_PACKET_TYPE_HEADER,
-                             .data_len = 16,
+                             .data_len = sizeof(BL_FIRMWARE_INFO_),
                              .data = binary_info,
-                             .crc = 0x00, // TO_DO
+                             .crc = 0x00,
                              .eof = BL_EOF};
+  header.crc =
+      stm_crc32.CalcCRC((uint8_t *)&header,
+                        4 + header.data_len); // 4= sof,packet_type,data_len
   serialport.write((char *)&header, sizeof(BL_STM32_Header_));
   serialport.flush();
   qDebug() << "Sending File Info  'Size,CRC'   :";
@@ -308,7 +323,7 @@ void MainWindow::on_btnFlash_clicked() {
                               .packet_type = BL_PACKET_TYPE_DATA,
                               .data_len = 0,
                               .data = &fw_data[0],
-                              .crc = 0x00, // TO_DO
+                              .crc = 0x00,
                               .eof = BL_EOF};
   uint8_t num = 0;
   uint8_t den = (fw_size / BL_DATA_MAX_SIZE) +
@@ -317,18 +332,31 @@ void MainWindow::on_btnFlash_clicked() {
   for (uint32_t i = 0; i < fw_size;) {
     (i + BL_DATA_MAX_SIZE <= fw_size) ? (chunk.data_len = BL_DATA_MAX_SIZE)
                                       : (chunk.data_len = fw_size - i);
+    chunk.crc =
+        stm_crc32.CalcCRC((uint8_t *)&chunk, 4); // 4= sof,packet_type,data_len
+    chunk.crc =
+        stm_crc32.CalcCRC_Add(chunk.crc, (uint8_t *)&chunk.data[i],
+                              chunk.data_len); // 4= sof,packet_type,data_len
     serialport.write((char *)&chunk,
                      4); /*sof=1B, packet_type=1B, data_len=2B */
     serialport.write((char *)&chunk.data[i], chunk.data_len);
     serialport.write((char *)&chunk.crc, 5); /*send crc=4B > eof=1B*/
     serialport.flush();
 
-    /* this is the first chunk, SO the mcu need some time to full earse
+    /* this is the first chunk, SO the mcu need some time to full erase
      * Flash apk sectors (5,6,7,8,9,10,11 in case of STM32F412ZGT6).
      */
-    /* if (i == 0)
-       WAIT_FLASH_ERASE_TIME */
-    /* However, i added and impliced this time inside  UART_READ_TIMEOUT_MS */
+
+    if (i == 0) {
+      Console_msg("Erase App sectors in the Flash");
+      uint8_t j = 5;
+      while (j--) {
+        WAIT_FLASH_ERASE_TIME
+        ui->txtConsole->insertPlainText(" . ");
+        qApp->processEvents();
+      }
+    }
+    ///* However, i added and impliced this time inside  UART_READ_TIMEOUT_MS */
 
     i += chunk.data_len;
     QString msg =
@@ -354,8 +382,10 @@ void MainWindow::on_btnFlash_clicked() {
                            .packet_type = BL_PACKET_TYPE_CMD,
                            .data_len = 1,
                            .cmd = BL_CMD_VERIFY,
-                           .crc = 0x00, // TO_DO
+                           .crc = 0x00,
                            .eof = BL_EOF};
+  stm_cmd.crc = stm_crc32.CalcCRC((uint8_t *)&stm_cmd,
+                                  5); /* 5= sof,packet_type,data_len,cmd*/
   QString msg = "Verify Binary Data: >>>";
   serialport.write((char *)&stm_cmd, sizeof(stm_cmd));
   serialport.flush();
@@ -383,13 +413,16 @@ uint8_t MainWindow::Receive_Response() {
                                  .status = 0,
                                  .crc = 0,
                                  .eof = 0};
-  ui->txtConsole->insertPlainText(" . ");
   if (readBytes((uint8_t *)&stm_resp, sizeof(stm_resp), UART_READ_TIMEOUT_MS,
                 UART_READ_SLEEP_US) == sizeof(stm_resp)) {
     if (stm_resp.sof == BL_SOF &&
         stm_resp.packet_type == BL_PACKET_TYPE_RESPONSE &&
-        stm_resp.data_len == 1 && stm_resp.crc == 0 && // TO_DO
-        stm_resp.eof == BL_EOF) {
+        stm_resp.data_len == 1 &&
+        stm_resp.crc ==
+            stm_crc32.CalcCRC(
+                (uint8_t *)&stm_resp,
+                4 + stm_resp.data_len) // 4= sof,packet_type,data_len
+        && stm_resp.eof == BL_EOF) {
       return stm_resp.status;
     }
     Console_msg_error(" Error : Response with uncorrected CRC.");

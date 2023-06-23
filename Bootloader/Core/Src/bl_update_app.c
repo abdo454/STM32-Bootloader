@@ -25,7 +25,11 @@ static uint8_t Bootloader_Earse_Flash();
 static uint16_t write_data_to_flash(uint8_t * ,uint16_t);
 static bool stay_in_Boooloader=true;
 static uint32_t flash_ptr=FLASH_APP_ADDER;
+static uint32_t CrcCCITTBytes(const uint8_t * data, uint32_t size);
 
+
+extern UART_HandleTypeDef huart2;
+extern CRC_HandleTypeDef hcrc;
 /*
  * Response Frame format
  *  ________________________________________________________________
@@ -80,7 +84,6 @@ typedef struct
 
 static BL_FIRMWARE_INFO_ fw_total_info = {0, 0, 0, 0};	   // the size the received with header packet
 static BL_FIRMWARE_INFO_ fw_received_info = {0, 0, 0, 0}; // the incremental size of packets which receiving from Host
-
 
 /**
  * @brief check if Host pc try to Connect to MCU for firmware update purpuse
@@ -180,10 +183,14 @@ static uint16_t receive_chunk(uint8_t *buf, uint16_t max_len)
 	// receive EOF byte (1byte)
 	if (HAL_UART_Receive(&huart2, &buf[index], 1, HAL_MAX_DELAY) != HAL_OK || buf[index] != BL_EOF)
 		return HAL_ERROR;
+	if(buf[index]!=BL_EOF)
+		return HAL_ERROR; /*Not received end of frame*/
+	cal_data_crc = CrcCCITTBytes( buf, 4+data_len); /*4= sof,packet_type, data length*/
 
-	// TO_DO Calculate the received data's CRC
+	//Verify the CRC
+	if(cal_data_crc!=rec_data_crc)
+		return HAL_ERROR;
 
-	// TO_DO Verify the CRC
 	if (max_len < index)
 	{
 		DEBUG_ERR_PRINT("Received more data than expected. Expected = %d, Received = %d",
@@ -205,6 +212,8 @@ static void process_chunk(uint8_t *buf)
 		DEBUG_PRINT("BL_PACKET_TYPE_HEADER");
 		fw_total_info.firmware_size = *(uint32_t *)&(frame->data);
 		fw_total_info.firmware_crc = *(uint32_t *)((&(frame->data)) + 4u);
+		fw_received_info.firmware_size=0;
+		fw_received_info.firmware_crc=0;
 		flash_ptr=FLASH_APP_ADDER;      /* Reset Flash Destination Adress */
 		DEBUG_PRINT("Received HEADER. FW Size = %ld", fw_total_info.firmware_size);
 		send_resp(BL_ACK);
@@ -251,7 +260,8 @@ static void process_chunk(uint8_t *buf)
 		case BL_CMD_VERIFY:
 			DEBUG_PRINT("BL_CMD_VERIFY");
 			DEBUG_PRINT("Validating the received Binary...");
-			fw_received_info.firmware_crc=0x0; // TO_DO Calculate CRC From Flash Memory directly
+			if(fw_received_info.firmware_size==	fw_total_info.firmware_size)
+				fw_received_info.firmware_crc=CrcCCITTBytes((uint32_t *)FLASH_APP_ADDER, fw_received_info.firmware_size);
 			if(fw_received_info.firmware_size!=	fw_total_info.firmware_size || 	fw_total_info.firmware_crc !=fw_received_info.firmware_crc){
 				send_resp(BL_NACK);
 				DEBUG_ERR_PRINT("FW Downloading Error ...");
@@ -356,10 +366,49 @@ static void send_resp(uint8_t type)
 			.packet_type = BL_PACKET_TYPE_RESPONSE,
 			.data_len = 0x01,
 			.status = type,
-			.crc = 0x00000000, // TO_DO
+			.crc = 0,
 			.eof = BL_EOF};
+	resp.crc= CrcCCITTBytes( (uint8_t *)&resp, 4+resp.data_len);
 	DEBUG_PRINT("Response : %d",resp.status);
 
 	// send response
 	HAL_UART_Transmit(&huart2, (uint8_t *)&resp, sizeof(BL_STM32_RESPONSE_), HAL_MAX_DELAY);
+}
+/*
+ * The HW CRC works on the part operates on 32-bit at a time.
+ *  To handle odd bytes, we must either use consistent padding bytes
+ */
+
+uint32_t CrcCCITTBytes(const uint8_t * data, uint32_t size) {
+	uint32_t i;
+	CRC->CR = CRC_CR_RESET;
+	while(CRC->CR & CRC_CR_RESET);  // avoiding the not-reset-fast-enough bug
+	i = size % 4;
+	switch(i) {
+	case 0:
+		break;
+	case 1:
+		CRC->DR = 0xFFFFFFB9;
+		CRC->DR = 0xAF644900
+				| (__RBIT(*(uint32_t*)(uintptr_t)&data[0]) >> 24)
+				;
+		break;
+	case 2:
+		CRC->DR = 0xFFFFB950;
+		CRC->DR = 0x64490000
+				| (__RBIT(*(uint32_t*)(uintptr_t)&data[0]) >> 16)
+				;
+		break;
+	case 3:
+		CRC->DR = 0xFFB9509B;
+		CRC->DR = 0x49000000
+				| (__RBIT(*(uint32_t*)(uintptr_t)&data[0]) >> 8)
+				;
+		break;
+	}
+
+	for (; i < size; i += 4) {
+		CRC->DR = __RBIT(*(uint32_t*)(uintptr_t)&data[i]);
+	}
+	return __RBIT(CRC->DR) ^ 0xFFFFFFFF;
 }

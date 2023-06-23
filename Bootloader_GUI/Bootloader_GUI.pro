@@ -11,11 +11,13 @@ CONFIG += c++11
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
+    stm32f412_crc32.cpp \
     timeout.cpp
 
 HEADERS += \
     bootloader_update.h \
     mainwindow.h \
+    stm32f412_crc32.h \
     timeout.h
 
 FORMS += \

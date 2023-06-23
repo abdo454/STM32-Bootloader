@@ -13,8 +13,8 @@
 
 #define BL_MCU_OPEN_CTN_LOOP 600            // Time between two Consecutive attemps to open connection with MCU
 
-#define WAIT_FLASH_ERASE_TIME delay(1000 * 1000);
-#define UART_READ_TIMEOUT_MS 7000           // msec
+#define WAIT_FLASH_ERASE_TIME delay( 1000 * 1000); // 1 second untill mcu earse all apk sectors
+#define UART_READ_TIMEOUT_MS 2000           //2sec =2000 msec
 #define UART_READ_SLEEP_US 100
 #define BL_DATA_MAX_SIZE (1024)             // Maximum data size in one Chunk
 #define BL_DATA_OVERHEAD (9)                // Other Bytes in the Chunk, without the Data ( SOF,Packet Type,Len,CRC EOF)

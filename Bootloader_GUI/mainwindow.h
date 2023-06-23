@@ -4,7 +4,7 @@
 // My Headers
 #include "bootloader_update.h"
 #include "timeout.h"
-
+#include "stm32f412_crc32.h"
 #include <QDebug>
 #include <QFile>
 #include <QFileDialog>
@@ -48,6 +48,7 @@ private slots:
 private:
   Ui::MainWindow *ui;
   QSerialPort serialport;
+  STM32F412_CRC32 stm_crc32;
   uint32_t fw_size;
   uint8_t fw_data[MAX_STM32_FW_SIZE];
 
